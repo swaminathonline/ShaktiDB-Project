@@ -2,9 +2,7 @@ from tabulate import tabulate
 import psycopg2
 import datetime
 
-# =========================================
 # DATABASE CONNECTION
-# =========================================
 
 conn = psycopg2.connect(
     dbname="postgres",
@@ -15,9 +13,7 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
-# =========================================
 # CREATE STUDENTS TABLE
-# =========================================
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS students(
@@ -30,9 +26,7 @@ CREATE TABLE IF NOT EXISTS students(
 
 conn.commit()
 
-# =========================================
 # CREATE ATTENDANCE TABLE
-# =========================================
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS attendance(
@@ -45,12 +39,26 @@ CREATE TABLE IF NOT EXISTS attendance(
 
 conn.commit()
 
-# =========================================
+# CREATE MARKS TABLE
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS marks(
+    student_id INT,
+    student_name VARCHAR(100),
+    subject VARCHAR(100),
+    internal_marks INT,
+    external_marks INT,
+    total INT,
+    grade VARCHAR(5)
+)
+""")
+
+conn.commit()
+
 # LOGIN SYSTEM
-# =========================================
 
 print("====================================")
-print("         LOGIN SYSTEM")
+print("LOGIN SYSTEM")
 print("====================================")
 
 username = input("Enter Username: ")
@@ -62,14 +70,12 @@ if username != "admin" or password != "1234":
 
 print("Login Successful")
 
-# =========================================
-# MAIN MENU LOOP
-# =========================================
+# MAIN MENU
 
 while True:
 
     print("\n====================================")
-    print("    STUDENT MANAGEMENT SYSTEM")
+    print("STUDENT MANAGEMENT SYSTEM")
     print("====================================")
 
     print("1. Add Student")
@@ -81,13 +87,13 @@ while True:
     print("7. Show Date and Time")
     print("8. Mark Attendance")
     print("9. View Attendance")
-    print("10. Exit")
+    print("10. Add Marks")
+    print("11. View Marks")
+    print("12. Exit")
 
     choice = input("Enter Choice: ")
 
-    # =====================================
     # ADD STUDENT
-    # =====================================
 
     if choice == "1":
 
@@ -107,9 +113,7 @@ while True:
 
         print("Student Added Successfully")
 
-    # =====================================
     # VIEW STUDENTS
-    # =====================================
 
     elif choice == "2":
 
@@ -123,17 +127,13 @@ while True:
 
         else:
 
-            print("\nSTUDENT RECORDS")
-
             print(tabulate(
                 rows,
                 headers=["ID", "Name", "Department", "Age"],
                 tablefmt="grid"
             ))
 
-    # =====================================
     # SEARCH STUDENT
-    # =====================================
 
     elif choice == "3":
 
@@ -155,17 +155,13 @@ while True:
 
         else:
 
-            print("\nSEARCH RESULTS")
-
             print(tabulate(
                 rows,
                 headers=["ID", "Name", "Department", "Age"],
                 tablefmt="grid"
             ))
 
-    # =====================================
     # DELETE STUDENT
-    # =====================================
 
     elif choice == "4":
 
@@ -183,9 +179,7 @@ while True:
 
         print("Student Deleted Successfully")
 
-    # =====================================
     # UPDATE STUDENT
-    # =====================================
 
     elif choice == "5":
 
@@ -210,9 +204,7 @@ while True:
 
         print("Student Updated Successfully")
 
-    # =====================================
     # COUNT STUDENTS
-    # =====================================
 
     elif choice == "6":
 
@@ -222,20 +214,15 @@ while True:
 
         print(f"Total Students = {count}")
 
-    # =====================================
-    # SHOW DATE AND TIME
-    # =====================================
+    # DATE AND TIME
 
     elif choice == "7":
 
         now = datetime.datetime.now()
 
-        print("Current Date and Time:")
         print(now)
 
-    # =====================================
     # MARK ATTENDANCE
-    # =====================================
 
     elif choice == "8":
 
@@ -260,9 +247,7 @@ while True:
 
         print("Attendance Marked Successfully")
 
-    # =====================================
     # VIEW ATTENDANCE
-    # =====================================
 
     elif choice == "9":
 
@@ -276,8 +261,6 @@ while True:
 
         else:
 
-            print("\nATTENDANCE RECORDS")
-
             print(tabulate(
                 rows,
                 headers=[
@@ -289,26 +272,100 @@ while True:
                 tablefmt="grid"
             ))
 
-    # =====================================
-    # EXIT
-    # =====================================
+    # ADD MARKS
 
     elif choice == "10":
+
+        sid = int(input("Enter Student ID: "))
+        sname = input("Enter Student Name: ")
+        subject = input("Enter Subject: ")
+
+        internal = int(input("Enter Internal Marks: "))
+        external = int(input("Enter External Marks: "))
+
+        total = internal + external
+
+        if total >= 90:
+            grade = "A+"
+
+        elif total >= 80:
+            grade = "A"
+
+        elif total >= 70:
+            grade = "B"
+
+        elif total >= 60:
+            grade = "C"
+
+        else:
+            grade = "F"
+
+        cur.execute(
+            """
+            INSERT INTO marks(
+                student_id,
+                student_name,
+                subject,
+                internal_marks,
+                external_marks,
+                total,
+                grade
+            )
+            VALUES(%s,%s,%s,%s,%s,%s,%s)
+            """,
+            (
+                sid,
+                sname,
+                subject,
+                internal,
+                external,
+                total,
+                grade
+            )
+        )
+
+        conn.commit()
+
+        print("Marks Added Successfully")
+
+    # VIEW MARKS
+
+    elif choice == "11":
+
+        cur.execute("SELECT * FROM marks")
+
+        rows = cur.fetchall()
+
+        if len(rows) == 0:
+
+            print("No Marks Records Found")
+
+        else:
+
+            print(tabulate(
+                rows,
+                headers=[
+                    "Student ID",
+                    "Student Name",
+                    "Subject",
+                    "Internal",
+                    "External",
+                    "Total",
+                    "Grade"
+                ],
+                tablefmt="grid"
+            ))
+
+    # EXIT
+
+    elif choice == "12":
 
         print("Thank You")
         break
 
-    # =====================================
-    # INVALID OPTION
-    # =====================================
-
     else:
 
         print("Invalid Choice")
-
-# =========================================
-# CLOSE DATABASE CONNECTION
-# =========================================
 
 cur.close()
 conn.close()
