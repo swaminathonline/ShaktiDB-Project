@@ -1,0 +1,10 @@
+venv/
+**pycache**/
+build/
+dist/
+*.spec
+*.pdf
+*.log
+*.pyc
+*.db
+
